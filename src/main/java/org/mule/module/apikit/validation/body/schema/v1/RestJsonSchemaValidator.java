@@ -30,7 +30,7 @@ public class RestJsonSchemaValidator implements IRestSchemaValidatorStrategy {
 
   private static final String JSON_SCHEMA_FAIL_ON_WARNING_KEY = "raml.json_schema.fail_on_warning";
 
-  protected static final Logger logger = LoggerFactory.getLogger(RestJsonSchemaValidator.class);
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
 
   private JsonSchema jsonSchema;
 

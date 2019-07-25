@@ -17,11 +17,9 @@ import org.mule.runtime.api.exception.TypedException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.commons.io.IOUtils;
-import org.mule.runtime.core.api.MuleContext;
 import org.raml.model.ActionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +36,10 @@ public class RamlHandler {
 
   private String apiResourcesRelativePath = "";
 
-  protected static final Logger logger = LoggerFactory.getLogger(RamlHandler.class);
-
-
-  private MuleContext muleContext;
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
 
   //ramlLocation should be the root raml location, relative of the resources folder
-  public RamlHandler(String ramlLocation, boolean keepRamlBaseUri, MuleContext muleContext) throws IOException {
+  public RamlHandler(String ramlLocation, boolean keepRamlBaseUri) throws IOException {
     this.keepRamlBaseUri = keepRamlBaseUri;
 
     String rootRamlLocation = findRootRaml(ramlLocation);
@@ -60,7 +55,6 @@ public class RamlHandler {
       this.apiResourcesRelativePath = rootRamlLocation.substring(0, idx + 1);
       this.apiResourcesRelativePath = sanitarizeResourceRelativePath(apiResourcesRelativePath);
     }
-    this.muleContext = muleContext;
   }
 
   public boolean isParserV2() {
@@ -108,7 +102,7 @@ public class RamlHandler {
       InputStream apiResource = null;
       ByteArrayOutputStream baos = null;
       try {
-        apiResource = muleContext.getExecutionClassLoader().getResourceAsStream(resourceRelativePath);
+        apiResource = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceRelativePath);
         if (!resourceRelativePath.endsWith(".raml") && !resourceRelativePath.endsWith(".json")
             && !resourceRelativePath.endsWith(".js") && !resourceRelativePath.endsWith(".html")) {
           throw ApikitErrorTypes.throwErrorType(new NotFoundException(resourceRelativePath));
@@ -183,16 +177,11 @@ public class RamlHandler {
   }
 
   private String findRootRaml(String ramlLocation) {
-    try {
-      final URL url = new URL(ramlLocation);
-      return url.toString();
-    } catch (MalformedURLException e) {
-      String[] startingLocations = new String[] {"", "api/", "api"};
-      for (String start : startingLocations) {
-        URL ramlLocationUrl = Thread.currentThread().getContextClassLoader().getResource(start + ramlLocation);
-        if (ramlLocationUrl != null) {
-          return start + ramlLocation;
-        }
+    String[] startingLocations = new String[] {"", "api/", "api"};
+    for (String start : startingLocations) {
+      URL ramlLocationUrl = Thread.currentThread().getContextClassLoader().getResource(start + ramlLocation);
+      if (ramlLocationUrl != null) {
+        return start + ramlLocation;
       }
     }
     return null;

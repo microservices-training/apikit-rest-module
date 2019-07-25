@@ -95,10 +95,10 @@
     </flow>
 
     <flow name="get:\repeat">
-        <logger level="INFO" message="#[attributes]"/>
+        <logger level="INFO" message="status: #[mel:httpStatus]"/>
     </flow>
 
     <flow name="get:\trackOrder">
-        <logger level="INFO" message="#[attributes]"/>
+        <logger level="INFO" message="status: #[mel:httpStatus]"/>
     </flow>
 </mule>

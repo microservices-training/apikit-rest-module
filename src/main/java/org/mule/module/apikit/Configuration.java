@@ -61,7 +61,7 @@ public class Configuration implements Initialisable, ValidationConfig, ConsoleCo
   private static final int URI_CACHE_SIZE = 1000;
 
 
-  protected static final Logger logger = LoggerFactory.getLogger(Configuration.class);
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
 
   private RamlHandler ramlHandler;
   private FlowFinder flowFinder;
@@ -81,7 +81,7 @@ public class Configuration implements Initialisable, ValidationConfig, ConsoleCo
   @Override
   public void initialise() throws InitialisationException {
     try {
-      ramlHandler = new RamlHandler(raml, keepRamlBaseUri, muleContext);
+      ramlHandler = new RamlHandler(raml, keepRamlBaseUri);
     } catch (IOException e) {
       throw new InitialisationException(e.fillInStackTrace(), this);
     }

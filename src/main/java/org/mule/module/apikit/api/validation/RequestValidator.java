@@ -8,45 +8,23 @@ package org.mule.module.apikit.api.validation;
 
 import org.mule.extension.http.api.HttpRequestAttributes;
 import org.mule.module.apikit.api.config.ValidationConfig;
-import org.mule.module.apikit.api.exception.MethodNotAllowedException;
 import org.mule.module.apikit.api.exception.MuleRestException;
 import org.mule.module.apikit.api.uri.ResolvedVariables;
 import org.mule.module.apikit.validation.AttributesValidator;
 import org.mule.module.apikit.validation.BodyValidator;
 import org.mule.raml.interfaces.model.IResource;
-import org.mule.runtime.api.exception.MuleRuntimeException;
-
-import static org.mule.apikit.common.CommonUtils.cast;
-import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
+import org.mule.runtime.api.exception.DefaultMuleException;
 
 public class RequestValidator {
 
   public static ValidRequest validate(ValidationConfig config, IResource resource, HttpRequestAttributes attributes,
                                       ResolvedVariables resolvedVariables, Object payload, String charset)
-      throws MuleRestException {
-
-    final HttpRequestAttributes httpRequestAttributes;
-    final ValidBody validBody;
-    if (config.isDisableValidations()) {
-      httpRequestAttributes = attributes;
-      validBody = new ValidBody(payload);
-    } else {
-      if (resource == null)
-        throw new MuleRuntimeException(createStaticMessage("Unexpected error. Resource cannot be null"));
-
-      final String method = attributes.getMethod().toLowerCase();
-      if (resource.getAction(method) == null) {
-        final String version = cast(resolvedVariables.get("version"));
-        throw new MethodNotAllowedException(resource.getResolvedUri(version) + " : " + method);
-      }
-
-      httpRequestAttributes = AttributesValidator.validateAndAddDefaults(attributes, resource, resolvedVariables, config);
-      validBody = BodyValidator.validate(resource.getAction(method), attributes, payload, config, charset);
-    }
+      throws DefaultMuleException, MuleRestException {
 
     return ValidRequest.builder()
-        .withAttributes(httpRequestAttributes)
-        .withBody(validBody)
+        .withAttributes(AttributesValidator.validateAndAddDefaults(attributes, resource, resolvedVariables, config))
+        .withBody(BodyValidator.validate(resource.getAction(attributes.getMethod().toLowerCase()), attributes, payload, config,
+                                         charset))
         .build();
 
   }

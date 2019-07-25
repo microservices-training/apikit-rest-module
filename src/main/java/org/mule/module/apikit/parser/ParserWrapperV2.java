@@ -10,22 +10,19 @@ import org.mule.module.apikit.api.UrlUtils;
 import org.mule.module.apikit.exception.ApikitRuntimeException;
 import org.mule.module.apikit.injector.RamlUpdater;
 import org.mule.raml.implv2.ParserV2Utils;
-import org.mule.raml.implv2.loader.ExchangeDependencyResourceLoader;
 import org.mule.raml.interfaces.model.IRaml;
-import org.mule.runtime.core.api.util.FileUtils;
-import org.raml.v2.api.loader.CompositeResourceLoader;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.List;
+
+import org.raml.parser.loader.CompositeResourceLoader;
 import org.raml.v2.api.loader.DefaultResourceLoader;
 import org.raml.v2.api.loader.ResourceLoader;
 import org.raml.v2.api.loader.RootRamlFileResourceLoader;
 import org.raml.v2.internal.utils.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.List;
-
-import static java.util.Optional.ofNullable;
 
 public class ParserWrapperV2 implements ParserWrapper {
 
@@ -36,26 +33,14 @@ public class ParserWrapperV2 implements ParserWrapper {
 
   public ParserWrapperV2(String ramlPath) {
     this.ramlPath = ramlPath;
-
-    final File ramlFile = fetchRamlFile(ramlPath);
-
-    if (ramlFile != null && ramlFile.getParent() != null) {
+    if (ramlPath != null && new File(ramlPath).getParent() != null) {
+      File ramlFile = new File(Thread.currentThread().getContextClassLoader().getResource(ramlPath).getFile());
       this.resourceLoader =
           new org.raml.v2.api.loader.CompositeResourceLoader(new RootRamlFileResourceLoader(ramlFile.getParentFile()),
-                                                             new DefaultResourceLoader(),
-                                                             new ExchangeDependencyResourceLoader(ramlFile.getParentFile()
-                                                                 .getAbsolutePath()));
+                                                             new DefaultResourceLoader());
     } else {
       this.resourceLoader = new DefaultResourceLoader();
     }
-  }
-
-  private File fetchRamlFile(String ramlPath) {
-    return ofNullable(ramlPath)
-        .map(p -> Thread.currentThread().getContextClassLoader().getResource(p))
-        .filter(FileUtils::isFile)
-        .map(resource -> new File(resource.getFile()))
-        .orElse(null);
   }
 
   @Override

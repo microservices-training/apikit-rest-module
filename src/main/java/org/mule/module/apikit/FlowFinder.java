@@ -6,33 +6,34 @@
  */
 package org.mule.module.apikit;
 
-import org.mule.apikit.common.FlowName;
 import org.mule.module.apikit.api.RamlHandler;
 import org.mule.module.apikit.api.RoutingTable;
-import org.mule.module.apikit.api.uri.URIPattern;
-import org.mule.module.apikit.api.uri.URIResolver;
+import org.mule.apikit.common.FlowName;
 import org.mule.module.apikit.exception.NotImplementedException;
 import org.mule.module.apikit.exception.UnsupportedMediaTypeException;
+import org.mule.module.apikit.api.uri.URIPattern;
+import org.mule.module.apikit.api.uri.URIResolver;
 import org.mule.raml.interfaces.model.IAction;
-import org.mule.raml.interfaces.model.IRaml;
 import org.mule.raml.interfaces.model.IResource;
+import org.mule.runtime.api.component.Component;
+import org.mule.runtime.api.component.ComponentIdentifier;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
 import org.mule.runtime.core.api.construct.Flow;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.mule.apikit.common.FlowName.FLOW_NAME_SEPARATOR;
 import static org.mule.apikit.common.FlowName.URL_RESOURCE_SEPARATOR;
-import static org.mule.module.apikit.api.FlowUtils.getFlowsList;
 
 public class FlowFinder {
 
-  protected static final Logger logger = LoggerFactory.getLogger(FlowFinder.class);
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
 
   private Map<String, IResource> flatResourceTree = new HashMap<>();
   private Map<String, Flow> restFlowMap;
@@ -56,8 +57,7 @@ public class FlowFinder {
   }
 
   protected void initializeRestFlowMap() {
-    final IRaml api = ramlHandler.getApi();
-    flattenResourceTree(api.getResources(), api.getVersion());
+    flattenResourceTree(ramlHandler.getApi().getResources());
 
     if (restFlowMap == null) {
       restFlowMap = new HashMap<>();
@@ -82,21 +82,23 @@ public class FlowFinder {
         }
       }
 
-      logMissingMappings(api.getVersion());
+      logMissingMappings();
 
       restFlowMapUnwrapped = new HashMap<>(restFlowMap);
     }
   }
 
   private List<Flow> getFlows() {
-    return getFlowsList(locator);
+    List<? extends Component> annotatedObjects =
+        locator.find(ComponentIdentifier.builder().name("flow").namespace("mule").build());
+    return (List<Flow>) annotatedObjects;
   }
 
-  private void flattenResourceTree(Map<String, IResource> resources, String version) {
+  private void flattenResourceTree(Map<String, IResource> resources) {
     for (IResource resource : resources.values()) {
-      flatResourceTree.put(resource.getResolvedUri(version), resource);
+      flatResourceTree.put(resource.getUri(), resource);
       if (resource.getResources() != null) {
-        flattenResourceTree(resource.getResources(), version);
+        flattenResourceTree(resource.getResources());
       }
     }
   }
@@ -172,9 +174,9 @@ public class FlowFinder {
     return null;
   }
 
-  private void logMissingMappings(String version) {
+  private void logMissingMappings() {
     for (IResource resource : flatResourceTree.values()) {
-      String fullResource = resource.getResolvedUri(version);
+      String fullResource = resource.getUri();
       for (IAction action : resource.getActions().values()) {
         String method = action.getType().name().toLowerCase();
         String key = method + ":" + fullResource;
@@ -212,7 +214,7 @@ public class FlowFinder {
 
 
   public Flow getFlow(IResource resource, String method, String contentType) throws UnsupportedMediaTypeException {
-    String baseKey = method + ":" + resource.getResolvedUri(ramlHandler.getApi().getVersion());
+    String baseKey = method + ":" + resource.getUri();
     Map<String, Flow> rawRestFlowMap = getRawRestFlowMap();
     Flow flow = rawRestFlowMap.get(baseKey + ":" + contentType);
     if (flow == null) {

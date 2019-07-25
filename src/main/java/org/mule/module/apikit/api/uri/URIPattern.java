@@ -7,13 +7,16 @@
 
 package org.mule.module.apikit.api.uri;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.mule.module.apikit.api.UrlUtils;
 import org.mule.module.apikit.uri.Matchable;
 import org.mule.module.apikit.uri.Token;
 import org.mule.module.apikit.uri.TokenLiteral;
+import org.mule.module.apikit.uri.URICoder;
 import org.mule.module.apikit.uri.URITemplate;
 import org.mule.module.apikit.uri.URITemplateSyntaxException;
 
@@ -34,6 +37,8 @@ import org.mule.module.apikit.uri.URITemplateSyntaxException;
  */
 public class URIPattern extends URITemplate implements Matchable {
 
+  private static final Set<Character> ESCAPE_CHARS = new HashSet<Character>(Arrays.asList('/', '{', '}'));
+
   /**
    * The regular expression pattern for matching URIs to this URI Pattern.
    */
@@ -51,7 +56,7 @@ public class URIPattern extends URITemplate implements Matchable {
    * @throws URITemplateSyntaxException If the string provided does not follow the proper syntax.
    */
   public URIPattern(String template, boolean encode) throws IllegalArgumentException {
-    super(encode ? UrlUtils.encode(template) : template);
+    super(encode ? URICoder.encode(template, ESCAPE_CHARS) : template);
     if (!isMatchable(this)) {
       throw new IllegalArgumentException(
                                          "Cannot create a URL pattern containing non-matchable tokens.");

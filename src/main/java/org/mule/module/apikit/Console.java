@@ -15,6 +15,7 @@ import org.mule.module.apikit.helpers.EventHelper;
 import org.mule.module.apikit.helpers.EventWrapper;
 import org.mule.runtime.api.component.AbstractComponent;
 import org.mule.runtime.api.component.location.ConfigurationComponentLocator;
+import org.mule.runtime.api.component.location.Location;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.lifecycle.Initialisable;
 import org.mule.runtime.api.lifecycle.InitialisationException;
@@ -32,8 +33,6 @@ import java.io.FileWriter;
 import java.net.URI;
 import java.util.Optional;
 
-import static org.mule.module.apikit.api.FlowUtils.getSourceLocation;
-
 public class Console extends AbstractComponent implements Processor, Initialisable {
 
   private final ApikitRegistry registry;
@@ -41,7 +40,7 @@ public class Console extends AbstractComponent implements Processor, Initialisab
 
   private Configuration configuration;
   private String name;
-  protected static final Logger logger = LoggerFactory.getLogger(Console.class);
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static final String CONSOLE_URL_FILE = "consoleurl";
 
@@ -57,7 +56,9 @@ public class Console extends AbstractComponent implements Processor, Initialisab
   @Override
   public void initialise() throws InitialisationException {
     final String name = getLocation().getRootContainerName();
-    final Optional<URI> url = getSourceLocation(locator, name);
+
+    final Optional<URI> url = locator.find(Location.builder().globalName(name).addSourcePart().build())
+        .map(MessageSourceUtils::getUriFromFlow);
 
     if (url.isPresent()) {
       URI uri = url.get();

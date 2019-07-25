@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 public class UrlencodedFormV2Validator implements FormValidatorStrategy<TypedValue> {
 
-  protected static final Logger logger = LoggerFactory.getLogger(UrlencodedFormV2Validator.class);
+  protected final Logger logger = LoggerFactory.getLogger(UrlencodedFormV2Validator.class);
   Map<String, List<IParameter>> formParameters;
   IMimeType actionMimeType;
   DataWeaveTransformer dataWeaveTransformer;
@@ -51,7 +51,7 @@ public class UrlencodedFormV2Validator implements FormValidatorStrategy<TypedVal
     MultiMap<String, String> requestMap = dataWeaveTransformer.getMultiMapFromPayload(originalPayload);
 
     try {
-      jsonText = new ObjectMapper().disableDefaultTyping().writeValueAsString(requestMap);
+      jsonText = new ObjectMapper().writeValueAsString(requestMap);
     } catch (Exception e) {
       logger.warn("Cannot validate url-encoded form", e);
       return originalPayload;

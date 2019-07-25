@@ -110,6 +110,11 @@ public class BodyValidator {
 
     final ValidBody validBody = new ValidBody(payload);
 
+    if (payload instanceof InputStream) {
+      final RewindableInputStream rewindableInputStream = new RewindableInputStream((InputStream) payload);
+      validBody.setPayload(rewindableInputStream);
+    }
+
     validator.validate(getPayloadAsString(validBody.getPayload(), charset));
 
     return validBody;

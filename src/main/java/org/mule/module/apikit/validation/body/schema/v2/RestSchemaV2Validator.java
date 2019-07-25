@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public class RestSchemaV2Validator implements IRestSchemaValidatorStrategy {
 
-  protected static final Logger logger = LoggerFactory.getLogger(RestSchemaV2Validator.class);
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
   private IMimeType mimeType;
 
   public RestSchemaV2Validator(IMimeType mimeType) {
