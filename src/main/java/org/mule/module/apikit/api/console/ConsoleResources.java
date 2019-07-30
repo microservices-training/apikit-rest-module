@@ -61,7 +61,7 @@ public class ConsoleResources {
         consoleResourcePath = CONSOLE_RESOURCES_BASE + resourceRelativePath;
       }
       Path normalizedPath = Paths.get(consoleResourcePath).normalize();
-      if (!normalizedPath.toString().startsWith(CONSOLE_RESOURCES_BASE)) {
+      if (!normalizedPath.startsWith(CONSOLE_RESOURCES_BASE)) {
         throw ApikitErrorTypes.throwErrorType(new NotFoundException(normalizedPath.toString()));
       }
       inputStream = getClass().getResourceAsStream(consoleResourcePath);
