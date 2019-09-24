@@ -9,9 +9,9 @@ package org.mule.module.apikit;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mule.module.apikit.api.RamlHandler;
-import org.mule.parser.service.ParserServiceException;
 import org.mule.raml.interfaces.ParserType;
 import org.mule.raml.interfaces.model.ApiVendor;
+import org.mule.raml.interfaces.model.IRaml;
 import org.mule.runtime.core.api.MuleContext;
 
 import java.io.IOException;
@@ -24,9 +24,11 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.mule.raml.interfaces.ParserType.AMF;
 import static org.mule.raml.interfaces.ParserType.AUTO;
 import static org.mule.raml.interfaces.ParserType.RAML;
+
 
 public class RamlHandlerTestCase {
 
@@ -40,7 +42,7 @@ public class RamlHandlerTestCase {
 
   @Test
   public void apiVendorForRaml08() throws IOException {
-    String ramlLocation = "org/mule/module/apikit/raml-handler/simple08.raml";
+    String ramlLocation = "unit/raml-handler/simple08.raml";
     String apiServer = "unused";
     RamlHandler handler = createRamlHandler(ramlLocation, true);
     handler.setApiServer(apiServer);
@@ -49,7 +51,7 @@ public class RamlHandlerTestCase {
 
   @Test
   public void isParserV2TrueUsingRaml10() throws IOException {
-    String ramlLocation = "org/mule/module/apikit/raml-handler/simple10.raml";
+    String ramlLocation = "unit/raml-handler/simple10.raml";
     String apiServer = "unused";
     RamlHandler handler = createRamlHandler(ramlLocation);
     handler.setApiServer(apiServer);
@@ -59,7 +61,7 @@ public class RamlHandlerTestCase {
 
   @Test
   public void addLocalHostAsServerWhenIsNotDefined() throws IOException {
-    String ramlLocation = "org/mule/module/apikit/raml-handler/simple10.raml";
+    String ramlLocation = "unit/raml-handler/simple10.raml";
     boolean keepRamlBaseUri = false;
     RamlHandler handler = createRamlHandler(ramlLocation, keepRamlBaseUri);
     handler.setApiServer("localhost:8081/");
@@ -69,12 +71,12 @@ public class RamlHandlerTestCase {
 
   @Test
   public void getRamlV2KeepRamlBaseUriTrue() throws IOException {
-    String ramlLocation = "org/mule/module/apikit/raml-handler/simple10-with-example.raml";
+    String ramlLocation = "unit/raml-handler/simple10-with-example.raml";
     boolean keepRamlBaseUri = true;
     String apiServer = "http://www.newBaseUri.com";
     RamlHandler handler = createRamlHandler(ramlLocation, keepRamlBaseUri);
     handler.setApiServer(apiServer);
-    String rootRaml = handler.getRamlV2("org/mule/module/apikit/raml-handler/?raml");
+    String rootRaml = handler.getRamlV2("unit/raml-handler/?raml");
     assertTrue(rootRaml.contains("RAML 1.0"));
     assertTrue(!rootRaml.contains(apiServer));
     assertTrue(rootRaml.contains("baseUri: http://localhost/myapi"));
@@ -84,7 +86,7 @@ public class RamlHandlerTestCase {
 
   @Test
   public void getRamlV2KeepRamlBaseUriFalse() throws IOException {
-    String ramlLocation = "org/mule/module/apikit/raml-handler/simple10-with-example.raml";// this.getClass().getResource("../../../../org/mule/module/apikit/simple-raml/simple10-with-example.raml").toString();
+    String ramlLocation = "unit/raml-handler/simple10-with-example.raml";// this.getClass().getResource("../../../../unit/simple-raml/simple10-with-example.raml").toString();
     String apiServer = "http://pepe.com";
     RamlHandler handler = createRamlHandler(ramlLocation, false);
     handler.setApiServer(apiServer);
@@ -92,7 +94,7 @@ public class RamlHandlerTestCase {
     String ramlV1 = handler.getRamlV1();
     assertTrue(ramlV1.contains("baseUri: " + apiServer));
 
-    String ramlV2 = handler.getRamlV2("org/mule/module/apikit/raml-handler/?raml");
+    String ramlV2 = handler.getRamlV2("unit/raml-handler/?raml");
     assertTrue(ramlV2.contains("baseUri: " + apiServer));
 
     String ramlAmf = handler.getAMFModel();
@@ -101,11 +103,11 @@ public class RamlHandlerTestCase {
 
   @Test
   public void getRamlV2Example() throws IOException {
-    String ramlLocation = "org/mule/module/apikit/raml-handler/simple10-with-example.raml";
+    String ramlLocation = "unit/raml-handler/simple10-with-example.raml";
     String apiServer = "unused";
     RamlHandler handler = createRamlHandler(ramlLocation);
     handler.setApiServer(apiServer);
-    assertTrue(handler.getRamlV2("org/mule/module/apikit/raml-handler/example.json/?raml").contains("{\"name\":\"jane\"}"));
+    assertTrue(handler.getRamlV2("unit/raml-handler/example.json/?raml").contains("{\"name\":\"jane\"}"));
   }
 
   @Test
@@ -114,11 +116,12 @@ public class RamlHandlerTestCase {
 
     final boolean keepRamlBaseUri = true;
 
-    handler = createRamlHandler("org/mule/module/apikit/raml-handler/amf-only.raml", keepRamlBaseUri, AUTO);
+    handler = createRamlHandler("unit/raml-handler/amf-only.raml", keepRamlBaseUri, AUTO);
     assertEquals(AMF, handler.getParserType());
 
     assertException("Unresolved reference 'SomeTypo'",
-                    () -> createRamlHandler("org/mule/module/apikit/raml-handler/failing-api.raml", keepRamlBaseUri, AUTO));
+                    () -> createRamlHandler("unit/raml-handler/failing-api.raml", keepRamlBaseUri, AUTO));
+
   }
 
   @Test
@@ -127,11 +130,11 @@ public class RamlHandlerTestCase {
 
     final boolean keepRamlBaseUri = true;
 
-    handler = createRamlHandler("org/mule/module/apikit/raml-handler/amf-only.raml", keepRamlBaseUri, AMF);
+    handler = createRamlHandler("unit/raml-handler/amf-only.raml", keepRamlBaseUri, AMF);
     assertEquals(AMF, handler.getParserType());
 
     assertException("Unresolved reference 'SomeTypo'",
-                    () -> createRamlHandler("org/mule/module/apikit/raml-handler/failing-api.raml", keepRamlBaseUri, AMF));
+                    () -> createRamlHandler("unit/raml-handler/failing-api.raml", keepRamlBaseUri, AMF));
   }
 
   @Test
@@ -140,13 +143,24 @@ public class RamlHandlerTestCase {
 
     final boolean keepRamlBaseUri = true;
 
-    handler = createRamlHandler("org/mule/module/apikit/raml-handler/raml-parser-only.raml", keepRamlBaseUri, RAML);
+    handler = createRamlHandler("unit/raml-handler/raml-parser-only.raml", keepRamlBaseUri, RAML);
     assertEquals(RAML, handler.getParserType());
 
     assertException("Invalid facets for type amf-valid-type:",
-                    () -> createRamlHandler("org/mule/module/apikit/raml-handler/amf-only.raml", keepRamlBaseUri, RAML));
+                    () -> createRamlHandler("unit/raml-handler/amf-only.raml", keepRamlBaseUri, RAML));
     assertException("Invalid reference 'SomeTypo'",
-                    () -> createRamlHandler("org/mule/module/apikit/raml-handler/failing-api.raml", keepRamlBaseUri, RAML));
+                    () -> createRamlHandler("unit/raml-handler/failing-api.raml", keepRamlBaseUri, RAML));
+  }
+
+  @Test
+  public void ramlWithSpacesInPath() {
+    RamlHandler handler;
+
+    handler = createRamlHandler("unit/space in path api/api.raml", true, RAML);
+    IRaml api = handler.getApi();
+    assertEquals(RAML, handler.getParserType());
+    assertThat(api.getAllReferences(), hasItems("unit/space in path api/example.json",
+                                                "unit/space in path api/more spaces/schema.json"));
   }
 
   private <A extends Exception, B> void assertException(String message, Supplier<B> supplier) {
