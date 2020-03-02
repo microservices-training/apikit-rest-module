@@ -105,9 +105,10 @@ public class Configuration implements Disposable, Initialisable, ValidationConfi
   public void initialise() throws InitialisationException {
     xmlEntitiesConfiguration();
     this.routerService = findExtension();
-    this.scheduler = schedulerService.ioScheduler();
+    final Scheduler scheduler = schedulerService.ioScheduler();
+    this.scheduler = scheduler;
     try {
-      ramlHandler = new RamlHandler(scheduler, getApi(), isKeepApiBaseUri(),
+      ramlHandler = new RamlHandler(this.scheduler, getApi(), isKeepApiBaseUri(),
                                     errorRepositoryFrom(muleContext), parserMode.get());
       this.routerService.ifPresent(rs -> {
         try {
