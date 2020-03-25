@@ -7,6 +7,9 @@
 package org.mule.module.apikit;
 
 import com.google.common.cache.LoadingCache;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import org.mule.apikit.model.Action;
 import org.mule.apikit.model.ApiSpecification;
 import org.mule.apikit.model.Resource;
 import org.mule.extension.http.api.HttpRequestAttributes;
@@ -77,6 +80,8 @@ public class Router extends AbstractComponent implements Processor, Initialisabl
   private StreamingManager streamingManager;
 
   private CursorStreamProviderFactory streamProviderFactory;
+
+  private ConcurrentHashMap<Action, String> successStatusCodesCache = new ConcurrentHashMap<>();
 
   @Inject
   public Router(ApikitRegistry registry, ConfigurationComponentLocator locator) {
@@ -172,7 +177,9 @@ public class Router extends AbstractComponent implements Processor, Initialisabl
           if (result.getVariables().get(config.getHttpStatusVarName()) == null) {
             // If status code is missing, a default one is added
             RamlHandler handler = config.getRamlHandler();
-            String successStatusCode = handler.getSuccessStatusCode(resource.getAction(attributes.getMethod().toLowerCase()));
+            Action action = resource.getAction(attributes.getMethod().toLowerCase());
+            String successStatusCode =
+                successStatusCodesCache.computeIfAbsent(action, action1 -> handler.getSuccessStatusCode(action1));
             return CoreEvent.builder(result).addVariable(config.getHttpStatusVarName(), successStatusCode).build();
           }
           return result;

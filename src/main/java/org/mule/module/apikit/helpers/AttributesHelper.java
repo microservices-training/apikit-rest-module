@@ -98,10 +98,12 @@ public class AttributesHelper {
    * @return List of parameter values or an empty list if parameter is not found
    */
   public static List<String> getParamValues(MultiMap<String, String> parameters, String parameterName) {
-    return parameters.keySet().stream()
-        .filter(header -> header.equalsIgnoreCase(parameterName))
-        .findFirst().map(parameters::getAll)
-        .orElse(emptyList());
+    for (String parameter : parameters.keySet()) {
+      if (parameter.equalsIgnoreCase(parameterName)) {
+        return parameters.getAll(parameter);
+      }
+    }
+    return emptyList();
   }
 
   /**

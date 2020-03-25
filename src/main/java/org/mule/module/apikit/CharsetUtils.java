@@ -6,6 +6,7 @@
  */
 package org.mule.module.apikit;
 
+import java.util.regex.Pattern;
 import org.mule.module.apikit.exception.UnsupportedMediaTypeException;
 import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.api.metadata.TypedValue;
@@ -17,6 +18,8 @@ import java.util.Optional;
 import static org.mule.module.apikit.helpers.AttributesHelper.getContentType;
 
 public class CharsetUtils {
+
+  private static final Pattern pattern = Pattern.compile("(?i)UTF-16.+");
 
   private CharsetUtils() {}
 
@@ -44,7 +47,7 @@ public class CharsetUtils {
   }
 
   private static String normalizeCharset(String encoding) {
-    if (encoding != null && encoding.matches("(?i)UTF-16.+")) {
+    if (encoding != null && pattern.matcher(encoding).matches()) {
       return "UTF-16";
     }
     return encoding;

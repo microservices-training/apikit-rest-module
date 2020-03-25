@@ -55,13 +55,10 @@ public class RestRequestValidator {
                                                                                                                   action,
                                                                                                                   uriParams,
                                                                                                                   config));
-      Future<ValidBody> validateBody = config.getScheduler().submit(
-                                                                    () -> BodyValidator
-                                                                        .validate(action, attributes, body, config,
-                                                                                  payloadCharset, errorTypeRepository));
+      ValidBody validBody = BodyValidator.validate(action, attributes, body, config, payloadCharset, errorTypeRepository);
       return ValidRequest.builder()
           .withAttributes(validateAttributes.get())
-          .withBody(validateBody.get())
+          .withBody(validBody)
           .build();
     } catch (InterruptedException e) {
       throw new ApikitRuntimeException(e);
